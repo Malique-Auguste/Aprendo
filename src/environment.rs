@@ -39,7 +39,27 @@ impl Environment {
             \r  4 - Test a random curation of phrases.
             \r  5 - Test a specific topic.
             \r  6 - Test most difficult phrases.
-            \r  7 - HELP!"
+            \r  7 - Supported Languages and ISO 639-1 Codes
+            \r  8 - HELP!"
+        );
+
+        let mut option = String::new();
+        Environment::read_input(&mut option);
+        println!("{:?}",
+            match option.parse() {
+                Ok(i) => match i {
+                    1 => self.add_phrase(),
+                    2 => self.add_multiple_phrases(),
+                    3 => self.translate(),
+                    4 => Err("Err: Not yet implemented".into()),
+                    5 => Err("Err: Not yet implemented".into()),
+                    6 => Err("Err: Not yet implemented".into()),
+                    7 => Err("Err: Not yet implemented".into()),
+                    8 => Err("Err: Not yet implemented".into()),
+                    _ => Err("Not a valid option.".into())
+                }
+                Err(_) => Err(format!("{} is not valid input(select a number to begin action).", option))
+            }
         );
     }
 
@@ -131,5 +151,26 @@ impl Environment {
                 lang
             )),
         }
+    }
+
+    pub fn translate(&self) -> Result<(), String> {
+        let mut phrase = String::new();
+        println!("\nEnter the phrase to be translated: ");
+        Environment::read_input(&mut phrase)?;
+
+        println!("\nEnter the phrase's ISO 639-1 language code: ");
+        let input_lang = Environment::read_language()?;
+
+        println!("\nEnter the target ISO 639-1 language code: ");
+        let output_lang = Environment::read_language()?;
+
+        let translation = match translate(&phrase, &input_lang, output_lang, true) {
+            Ok(t) => t,
+            Err(e) => return Err(format!("Unable to translate because: {}", e)),
+        };
+
+        println!("Translation: {}", translation);
+
+        Ok(())
     }
 }
