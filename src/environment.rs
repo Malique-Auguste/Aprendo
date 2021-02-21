@@ -1,6 +1,6 @@
 use crate::dictionary::Dictionary;
 use crate::phrase::{Language, Phrase};
-use crate::translation::Translation;
+use crate::translation::translate;
 
 use serde::{Deserialize, Serialize};
 use std::io;
@@ -63,7 +63,7 @@ impl Environment {
                 break;
             }
 
-            let translation = match Translation::translate(&phrase, &input_lang, output_lang, true)
+            let translation = match translate(&phrase, &input_lang, output_lang, true)
             {
                 Ok(t) => t,
                 Err(e) => return Err(format!("Unable to translate because: {}", e)),
@@ -92,7 +92,7 @@ impl Environment {
         println!("\nEnter the target ISO 639-1 language code: ");
         let output_lang = Environment::read_language()?;
 
-        let translation = match Translation::translate(&phrase, &input_lang, output_lang, true) {
+        let translation = match translate(&phrase, &input_lang, output_lang, true) {
             Ok(t) => t,
             Err(e) => return Err(format!("Unable to translate because: {}", e)),
         };

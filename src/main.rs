@@ -5,7 +5,8 @@ mod translation;
 
 fn main() {
     use environment::Environment;
+    use translation::translate;
+    use phrase::Language;
 
-    let mut env = Environment::new_empty();
-    env.start();
+    println!("{:?}", translate("me llamo malique", &Language::Spanish, Language::English, true))
 }
