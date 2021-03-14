@@ -45,10 +45,10 @@ impl Environment {
                     2 => self.add_multiple_phrases(),
                     3 => self.translate(),
                     4 => self.test_random(),
-                    5 => Err("Err: Not yet implemented".into()),
-                    6 => Err("Err: Not yet implemented".into()),
-                    7 => Err("Err: Not yet implemented".into()),
-                    8 => Err("Err: Not yet implemented".into()),
+                    5 => Err("Not yet implemented".into()),
+                    6 => Err("Not yet implemented".into()),
+                    7 => Err("Not yet implemented".into()),
+                    8 => Err("Not yet implemented".into()),
                     9 => break,
                     _ => Err("Not a valid option.".into())
                 }
@@ -56,7 +56,7 @@ impl Environment {
             };
 
             if let Err(e) = result {
-                println!("\n{}", e);
+                println!("\nErr: {}", e);
             }
         }
     }
@@ -123,18 +123,29 @@ impl Environment {
     }
 
     pub fn test_random(&mut self) -> Result<(), String> {
+        let mut lang_group = String::new();
+        println!("Enter a group of ISO 639-1 language codes(en|es): ");
+        Environment::read_input(&mut lang_group)?;
+        let lang_group: Vec<Language> = lang_group.split("|").map(|s| Language::from_str(s).unwrap()).collect();
+
+        let lang_group_size = self.dict.get_lang_group(&lang_group).len();
+        if lang_group_size < 3 {
+            return Err("There are less than 3 phrases with that group of language codes.".into())
+        }
+
         let mut test_length = String::new();
-        println!("\nYour dictionary currently holds {} phrases. Enter how many of them you would like to test: ", self.dict.size());
+        println!("\nYour dictionary currently holds {} phrases with that language code. Enter how many of them you would like to test: ", lang_group_size);
         Environment::read_input(&mut test_length)?;
         let test_length = match test_length.parse() {
             Ok(n) => n,
             Err(e) => return Err(format!("{:?}", e))
         };
 
-        let test_phrases = self.dict.get_test_phrases(test_length);
+        let test_phrases = self.dict.get_test_phrases(test_length, &lang_group);
 
-        for phrase in test_phrases {
-            println!("{:?}\n", phrase);
+        println!("Select a, b or c to choose the translation.");
+        for phrase in test_phrases.iter() {
+            println!("{}", phrase)
         }
 
         Ok(())

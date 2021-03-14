@@ -3,7 +3,7 @@ use crate::translation::Translation;
 use serde::{Deserialize, Serialize};
 use std::time::SystemTime;
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Language {
     English,
     French,
@@ -31,7 +31,7 @@ impl std::fmt::Display for Language {
     }
 }
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq)]
 pub enum Difficulty {
     VeryEasy,
     Easy,

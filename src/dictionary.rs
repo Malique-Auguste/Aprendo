@@ -1,4 +1,5 @@
-use crate::phrase::Phrase;
+use crate::phrase::{Phrase, Language};
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs::read_to_string;
@@ -30,8 +31,8 @@ impl Dictionary {
         }
     }
 
-    pub fn get_test_phrases(&self, mut size: usize) -> Vec<&Phrase> {
-        let all_phrases = self.inner.values();
+    pub fn get_test_phrases(&self, mut size: usize, lang_group: &Vec<Language>) -> Vec<&Phrase> {
+        let all_phrases = self.get_lang_group(lang_group);
         let all_phrases_len = all_phrases.len();
         if size >= all_phrases.len() {
             size = 0;
@@ -40,7 +41,7 @@ impl Dictionary {
             size = all_phrases_len - size;
         }
 
-        let mut all_phrases: Vec<(&Phrase, usize)> = all_phrases.zip(vec![0; all_phrases_len]).collect();
+        let mut all_phrases: Vec<(&&Phrase, usize)> = all_phrases.iter().zip(vec![0; all_phrases_len]).collect();
 
         for group in all_phrases.iter_mut() {
             //28800 is the number of seconds in 8 hours
@@ -67,7 +68,7 @@ impl Dictionary {
             all_phrases.remove(pos);
         }
 
-        all_phrases.iter().map(|x| x.0).collect()
+        all_phrases.iter().map(|x| *x.0).collect()
     }
 
     pub fn get_val(&self, key: &str) -> Option<&Phrase> {
@@ -80,6 +81,18 @@ impl Dictionary {
 
     pub fn get_topic(&self, topic: String) -> Vec<&Phrase> {
         self.inner.values().filter(|p| p.topic == topic).collect()
+    }
+
+    pub fn get_lang_group(&self, lang_group: &Vec<Language>) -> Vec<&Phrase> {
+        let mut all_phrases: Vec<&Phrase> = self.inner.values().collect();
+
+        all_phrases.retain(|p| lang_group.iter().any(|l| *l == p.language));
+
+        all_phrases.retain(|p| {
+            p.translations.iter().any(|t| lang_group.iter().any(|l| *l == t.language))
+        });
+
+        all_phrases
     }
 
     pub fn insert(&mut self, key: String, value: Phrase) -> Option<Phrase> {
