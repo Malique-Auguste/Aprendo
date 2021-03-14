@@ -31,6 +31,27 @@ impl std::fmt::Display for Language {
     }
 }
 
+#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
+pub enum Difficulty {
+    VeryEasy,
+    Easy,
+    Average,
+    Hard,
+    VeryHard
+}
+
+impl Difficulty {
+    pub fn as_num(&self) -> usize {
+        match self {
+            Difficulty::VeryEasy => 1,
+            Difficulty::Easy => 4,
+            Difficulty::Average => 9,
+            Difficulty::Hard => 16,
+            Difficulty::VeryHard => 25,
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Phrase {
     pub spelling: String,
@@ -39,8 +60,9 @@ pub struct Phrase {
     pub translations: Vec<Translation>,
     pub topic: String,
 
-    last_tested: SystemTime,
-    score: i8,
+    pub last_tested: SystemTime,
+    pub difficulty: Difficulty,
+    pub length: usize,
 }
 
 impl Phrase {
@@ -50,13 +72,17 @@ impl Phrase {
         topic: String,
         translations: Vec<Translation>,
     ) -> Phrase {
+        let spelling: String = spelling.into();
+        let length = spelling.chars().count();
+
         Phrase {
-            spelling: spelling.into(),
+            spelling: spelling,
             language,
             translations,
             topic,
             last_tested: SystemTime::now(),
-            score: 50,
+            difficulty: Difficulty::Average,
+            length: length
         }
     }
 }
@@ -70,7 +96,7 @@ impl std::fmt::Display for Phrase {
 impl std::fmt::Debug for Phrase {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         if f.alternate() {
-            return write!(f, "Spelling: {}\nLanguage: {:?}\nTranslations: {:?}\nTopic: {}\nLast Tested: {:?}\nScore: {}", self.spelling, self.language, self.translations, self.topic, self.last_tested, self.score);
+            return write!(f, "Spelling: {}\nLanguage: {:?}\nTranslations: {:?}\nTopic: {}\nLast Tested: {:?}\nDifficulty: {:?}\nLength {}", self.spelling, self.language, self.translations, self.topic, self.last_tested, self.difficulty, self.length);
         } else {
             return write!(
                 f,

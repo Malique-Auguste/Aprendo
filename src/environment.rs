@@ -3,64 +3,62 @@ use crate::phrase::{Language, Phrase};
 use crate::translation::translate;
 
 use serde::{Deserialize, Serialize};
-use std::io;
-
-#[derive(Debug, Copy, Clone, Serialize, Deserialize)]
-pub enum Mode {
-    Translating,
-    Testing,
-}
+use std::{io, fs, collections::HashMap};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Environment {
     dict: Dictionary,
-    mode: Mode,
 }
 
 impl Environment {
-    pub fn new_empty() -> Environment {
-        Environment {
-            dict: Dictionary::new(),
-            mode: Mode::Translating,
-        }
+    pub fn new(path: Option<&str>) -> Result<Environment, String> {
+        Ok(Environment {
+            dict: Dictionary::new(path)?
+        })
     }
 
     pub fn start(&mut self) {
         println!(
             "Welcome to Aperndo!
-            \rThis is a command line interace made to handle all your translation needs.\n"
+            \rThis is a command line interace made to handle all your translation needs."
         );
 
-        println!(
-            "Select an action.
-            \r  1 - Add a single phrase to the dictionary.
-            \r  2 - Add multiple phrases to the dictionary.
-            \r  3 - Translate a phrase.
-            \r  4 - Test a random curation of phrases.
-            \r  5 - Test a specific topic.
-            \r  6 - Test most difficult phrases.
-            \r  7 - Supported Languages and ISO 639-1 Codes
-            \r  8 - HELP!"
-        );
+        loop {
+            println!(
+                "\nSelect an action.
+                \r  1 - Add a single phrase to the dictionary.
+                \r  2 - Add multiple phrases to the dictionary.
+                \r  3 - Translate a phrase.
+                \r  4 - Test a random curation of phrases.
+                \r  5 - Test a specific topic.
+                \r  6 - Test most difficult phrases.
+                \r  7 - Supported Languages and ISO 639-1 Codes
+                \r  8 - HELP!
+                \r  9 - Exit"
+            );
 
-        let mut option = String::new();
-        Environment::read_input(&mut option);
-        println!("{:?}",
-            match option.parse() {
+            let mut option = String::new();
+            Environment::read_input(&mut option);
+            let result =  match option.parse() {
                 Ok(i) => match i {
                     1 => self.add_phrase(),
                     2 => self.add_multiple_phrases(),
                     3 => self.translate(),
-                    4 => Err("Err: Not yet implemented".into()),
+                    4 => self.test_random(),
                     5 => Err("Err: Not yet implemented".into()),
                     6 => Err("Err: Not yet implemented".into()),
                     7 => Err("Err: Not yet implemented".into()),
                     8 => Err("Err: Not yet implemented".into()),
+                    9 => break,
                     _ => Err("Not a valid option.".into())
                 }
-                Err(_) => Err(format!("{} is not valid input(select a number to begin action).", option))
+                Err(_) => Err(format!("'{}' is not valid input(select a number to begin action).", option))
+            };
+
+            if let Err(e) = result {
+                println!("\n{}", e);
             }
-        );
+        }
     }
 
     pub fn add_multiple_phrases(&mut self) -> Result<(), String> {
@@ -124,6 +122,24 @@ impl Environment {
         Ok(())
     }
 
+    pub fn test_random(&mut self) -> Result<(), String> {
+        let mut test_length = String::new();
+        println!("\nYour dictionary currently holds {} phrases. Enter how many of them you would like to test: ", self.dict.size());
+        Environment::read_input(&mut test_length)?;
+        let test_length = match test_length.parse() {
+            Ok(n) => n,
+            Err(e) => return Err(format!("{:?}", e))
+        };
+
+        let test_phrases = self.dict.get_test_phrases(test_length);
+
+        for phrase in test_phrases {
+            println!("{:?}\n", phrase);
+        }
+
+        Ok(())
+    }
+
     fn read_input(s: &mut String) -> Result<(), String> {
         if let Err(e) = io::stdin().read_line(s) {
             return Err(format!("Unable to read lang due to: {}", e));
@@ -172,5 +188,13 @@ impl Environment {
         println!("Translation: {}", translation);
 
         Ok(())
+    }
+}
+
+impl Drop for Environment {
+    fn drop(&mut self) {
+        if let Err(e) = fs::write("dictionary-save", self.dict.as_json()) {
+            println!("Error in saving dictionary: {:?}", e);
+        }
     }
 }
