@@ -11,12 +11,12 @@ pub enum Language {
 }
 
 impl Language {
-    pub fn from_str(input: &str) -> Result<Language, ()> {
+    pub fn from_str(input: &str) -> Result<Language, String> {
         match input {
             "en" | "english" | "English" | "ENGLISH" => Ok(Language::English),
             "fr" | "french" | "French" | "FRENCH" => Ok(Language::French),
             "es" | "spanish" | "Spanish" | "SPANISH" => Ok(Language::Spanish),
-            _ => Err(()),
+            _ => Err(format!("{} is not a language known by the program.", input)),
         }
     }
 }
@@ -37,7 +37,7 @@ pub enum Difficulty {
     Easy,
     Average,
     Hard,
-    VeryHard
+    VeryHard,
 }
 
 impl Difficulty {
@@ -76,13 +76,13 @@ impl Phrase {
         let length = spelling.chars().count();
 
         Phrase {
-            spelling: spelling,
+            spelling,
             language,
             translations,
             topic,
             last_tested: SystemTime::now(),
             difficulty: Difficulty::Average,
-            length: length
+            length,
         }
     }
 }

@@ -3,7 +3,7 @@ use crate::phrase::{Language, Phrase};
 use crate::translation::translate;
 
 use serde::{Deserialize, Serialize};
-use std::{io, fs, collections::HashMap};
+use std::{fs, io};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Environment {
@@ -13,7 +13,7 @@ pub struct Environment {
 impl Environment {
     pub fn new(path: Option<&str>) -> Result<Environment, String> {
         Ok(Environment {
-            dict: Dictionary::new(path)?
+            dict: Dictionary::new(path)?,
         })
     }
 
@@ -38,8 +38,11 @@ impl Environment {
             );
 
             let mut option = String::new();
-            Environment::read_input(&mut option);
-            let result =  match option.parse() {
+            if let Err(e) = Environment::read_input(&mut option) {
+                println!("Err: {}\n Exiting program.", e);
+                break;
+            };
+            let result = match option.parse() {
                 Ok(i) => match i {
                     1 => self.add_phrase(),
                     2 => self.add_multiple_phrases(),
@@ -50,9 +53,12 @@ impl Environment {
                     7 => Err("Not yet implemented".into()),
                     8 => Err("Not yet implemented".into()),
                     9 => break,
-                    _ => Err("Not a valid option.".into())
-                }
-                Err(_) => Err(format!("'{}' is not valid input(select a number to begin action).", option))
+                    _ => Err("Not a valid option.".into()),
+                },
+                Err(_) => Err(format!(
+                    "'{}' is not valid input(select a number to begin action).",
+                    option
+                )),
             };
 
             if let Err(e) = result {
@@ -77,12 +83,11 @@ impl Environment {
             println!("\nEnter phrase to be translated: ");
             Environment::read_input(&mut phrase)?;
 
-            if phrase == String::from("") {
+            if phrase == String::new() {
                 break;
             }
 
-            let translation = match translate(&phrase, &input_lang, output_lang, true)
-            {
+            let translation = match translate(&phrase, &input_lang, output_lang, true) {
                 Ok(t) => t,
                 Err(e) => return Err(format!("Unable to translate because: {}", e)),
             };
@@ -126,19 +131,33 @@ impl Environment {
         let mut lang_group = String::new();
         println!("Enter a group of ISO 639-1 language codes(en|es): ");
         Environment::read_input(&mut lang_group)?;
-        let lang_group: Vec<Language> = lang_group.split("|").map(|s| Language::from_str(s).unwrap()).collect();
+        let lang_group: Vec<&str> = lang_group
+            .split('|')
+            .collect();
+
+        let lang_group = {
+            let mut temp_lang_group: Vec<Language> = Vec::new();
+            for lang in lang_group.iter() {
+                temp_lang_group.push(match Language::from_str(lang) {
+                    Ok(l) => l,
+                    Err(_) => return Err("Invalid language code entered.".into()),
+                });
+            } 
+
+            temp_lang_group
+        };
 
         let lang_group_size = self.dict.get_lang_group(&lang_group).len();
         if lang_group_size < 3 {
-            return Err("There are less than 3 phrases with that group of language codes.".into())
+            return Err("There are less than 3 phrases with that group of language codes.".into());
         }
 
         let mut test_length = String::new();
-        println!("\nYour dictionary currently holds {} phrases with that language code. Enter how many of them you would like to test: ", lang_group_size);
+        println!("\nYour dictionary currently holds {} phrases with those language codes. Enter how many of them you would like to test: ", lang_group_size);
         Environment::read_input(&mut test_length)?;
         let test_length = match test_length.parse() {
             Ok(n) => n,
-            Err(e) => return Err(format!("{:?}", e))
+            Err(e) => return Err(format!("{:?}", e)),
         };
 
         let test_phrases = self.dict.get_test_phrases(test_length, &lang_group);

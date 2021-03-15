@@ -1,6 +1,6 @@
 use crate::phrase::Language;
-use serde::{Deserialize, Serialize};
 
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct Translation {
@@ -41,7 +41,6 @@ impl std::fmt::Debug for Translation {
     }
 }
 
-
 pub fn translate(
     phrase: &str,
     input_lang: &Language,
@@ -60,7 +59,10 @@ pub fn translate(
     let response = reqwest::blocking::get(&url).unwrap().text().unwrap();
 
     if !response.contains("\"responseStatus\":200,\"") {
-        return Err(format!("Response doesnt have a response status of 200 (OK). Response is:\n {}", response));
+        return Err(format!(
+            "Response doesnt have a response status of 200 (OK). Response is:\n {}",
+            response
+        ));
     }
 
     let mut num = 0;

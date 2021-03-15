@@ -1,8 +1,8 @@
 mod dictionary;
 mod environment;
+mod helper;
 mod phrase;
 mod translation;
-mod helper;
 
 fn main() {
     use environment::Environment;
