@@ -16,7 +16,7 @@ impl Language {
             "en" | "english" | "English" | "ENGLISH" => Ok(Language::English),
             "fr" | "french" | "French" | "FRENCH" => Ok(Language::French),
             "es" | "spanish" | "Spanish" | "SPANISH" => Ok(Language::Spanish),
-            _ => Err(format!("{} is not a language known by the program.", input)),
+            _ => Err(format!("{} is not a language translatable by this program.", input)),
         }
     }
 }
