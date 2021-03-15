@@ -1,5 +1,5 @@
-use crate::phrase::{Language, Phrase};
 use crate::helper::shuffle;
+use crate::phrase::{Language, Phrase};
 
 use rand::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -16,11 +16,17 @@ impl Dictionary {
         serde_json::to_string_pretty(&self).unwrap()
     }
 
-    pub fn new(path: Option<&str>) -> Result<Dictionary, String> {
+    pub fn new(path: Option<&str>) -> Result<Dictionary, (Dictionary, String)> {
         match path {
             Some(p) => {
-                let data = read_to_string(p).unwrap();
-                Ok(serde_json::from_str(&data).unwrap())
+                match read_to_string(p) {
+                    Ok(s) => Ok(serde_json::from_str(&s).unwrap()),
+                    Err(e) => Err((Dictionary {
+                            inner: HashMap::new(),
+                        },
+                        format!("{}", e)
+                    )),
+                }
             }
             None => Ok(Dictionary {
                 inner: HashMap::new(),

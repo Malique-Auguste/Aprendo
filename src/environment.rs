@@ -11,10 +11,11 @@ pub struct Environment {
 }
 
 impl Environment {
-    pub fn new(path: Option<&str>) -> Result<Environment, String> {
-        Ok(Environment {
-            dict: Dictionary::new(path)?,
-        })
+    pub fn new(path: Option<&str>) -> Result<Environment, (Environment, String)> {
+        match Dictionary::new(path) {
+            Ok(dict) => Ok(Environment { dict }),
+            Err(e) => Err((Environment { dict: e.0 }, e.1))
+        }
     }
 
     pub fn start(&mut self) {
@@ -131,9 +132,7 @@ impl Environment {
         let mut lang_group = String::new();
         println!("Enter a group of ISO 639-1 language codes(en|es): ");
         Environment::read_input(&mut lang_group)?;
-        let lang_group: Vec<&str> = lang_group
-            .split('|')
-            .collect();
+        let lang_group: Vec<&str> = lang_group.split('|').collect();
 
         let lang_group = {
             let mut temp_lang_group: Vec<Language> = Vec::new();
@@ -142,7 +141,7 @@ impl Environment {
                     Ok(l) => l,
                     Err(_) => return Err("Invalid language code entered.".into()),
                 });
-            } 
+            }
 
             temp_lang_group
         };
