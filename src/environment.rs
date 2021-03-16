@@ -1,7 +1,9 @@
 use crate::dictionary::Dictionary;
 use crate::phrase::{Language, Phrase};
 use crate::translation::translate;
+use crate::helper::{get_rand_unique_indices, shuffle};
 
+use rand::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::{fs, io};
 
@@ -147,8 +149,8 @@ impl Environment {
         };
 
         let lang_group_size = self.dict.get_lang_group(&lang_group).len();
-        if lang_group_size < 3 {
-            return Err("There are less than 3 phrases with that group of language codes.".into());
+        if lang_group_size < 5 {
+            return Err("There are less than 5 phrases with that group of language codes.".into());
         }
 
         let mut test_length = String::new();
@@ -159,11 +161,21 @@ impl Environment {
             Err(e) => return Err(format!("{:?}", e)),
         };
 
+        if test_length < 5 {
+            return Err("You must choose to test more than 4 phrases.".into());
+        }
+
         let test_phrases = self.dict.get_test_phrases(test_length, &lang_group);
 
-        println!("Select a, b or c to choose the translation.");
-        for phrase in test_phrases.iter() {
-            println!("{}", phrase)
+        println!("Select a, b, c or d to choose the translation.");
+        for i in 0..test_phrases.len() {           
+            let mut indices = get_rand_unique_indices(test_phrases.len(), 4, Some(i))?;
+
+            println!("{}", test_phrases[i]);
+            println!("a) {}", test_phrases[indices[0]]);
+            println!("b) {}", test_phrases[indices[1]]);
+            println!("c) {}", test_phrases[indices[2]]);         
+            println!("d) {}\n", test_phrases[indices[3]]); 
         }
 
         Ok(())
